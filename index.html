@@ -17,7 +17,7 @@
   </head>
   
   <body>
-    
+      
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
 		<a class="navbar-brand" href="#">Navbar</a>
 		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,40 +29,115 @@
         <a class="nav-link" href="#home">Home <span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#screen2">Screen 2</a>
+        <a class="nav-link" href="#screen2">List</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#screen3">Screen 3</a>
+        <a class="nav-link" href="#screen3">Details</a>
       </li>
     </ul>
   </div>
   </nav>
   <div class="content" id="home">
-    Home page
+    <form id="myForm">
+      <input type="text" id="name" placeholder="Enter note header">
+      <input type="text" id="notes" placeholder="Enter your notes">      
+      </form>
+      <button id="getFormData">Save Notes</button>
+      <button id="clearNotes">Clear Notes</button>
+      
   </div>
   <div class="content" id="screen2">
-    This is screen 2
+      <div id="list">
+          
+      </div>
   </div>
   <div class="content" id="screen3">
-    This is screen 3
+    <div id="noteInfo">
+          
+    </div>
   </div>
 
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>  
+      <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
       
-
-    <script>
+      <script>  
+      var db = new Dexie("notesDB");
+      db.version(1).stores({
+          notes: '++id,name, notes'
+      });
+  
       $(document).ready(function() {
 
+        $("#home").show();
+          
         function hideScreens() {
           $(".content").hide();
         }
 
+        function loadNotesList(){
+            //clear contents
+            console.log("in loadnotes function");
+            $("#list").empty();
+            db.notes.each(function(note){
+               var p = $("<p>");
+               //p.attr("data-id", note.id);
+               p.text(note.name); 
+               $("#list").append(p);
+               
+               var hr = $("<hr>");
+               $("#list").append(hr);
+               
+            });
+        }  
+          
         $(".nav-link").on("click", function(){
           hideScreens();
           var target = $(this).attr("href");
           $(target).show();
+          console.log(target);
+            
+          if(target == "#screen2"){
+              //loop through the notes 
+              console.log("loading notes");
+              loadNotesList();
+              
+          }
+            
+        });
+          
+        $("#getFormData").on("click", function() {
+          var subject = $("#name").val();
+          var content = $("#notes").val();
+         
+          // loop through notes
+          db.notes.put({name: subject, notes: content});
+          console.log(subject);
+        });
+       
+        $(document).on("click", "p", function(){
+          var text = $(this).text();
+          //console.log(text);
+          var info;
+            
+          db.notes.each(function(note){
+               if(note.name == text){
+                   $("#noteInfo").empty();
+                   info = note.notes;
+                   var p = $("<p>");
+                   
+                   p.text(info); 
+                   $("#noteInfo").append(p);
+               }
+               
+          });
+            
+          
+          
+        });   
+                                    
+        $("#clearNotes").on("click", function() {
+          db.notes.clear();
         });
 
       });
